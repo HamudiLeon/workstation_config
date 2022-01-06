@@ -1,0 +1,366 @@
+#  ---------------------------------------------------------------------------
+# @author hamudi
+#  Description:  This file holds all my BASH configurations and aliases
+#
+#  Sections:
+#  1.   Environment Configuration
+#  2.   Make Terminal Better (remapping defaults and adding functionality)
+#  3.   File and Folder Management
+#  4.   Searching
+#  5.   Process Management
+#  6.   Networking
+#  7.   System Operations & Information
+#  8.   Web Development
+#  9.   Reminders & Notes
+###### mysql notes
+# To have launchd start mysql at login:
+#    ln -sfv /usr/local/opt/mysql/*.plist ~/Library/LaunchAgents
+# Then to load mysql now:
+#    launchctl load ~/Library/LaunchAgents/homebrew.mxcl.mysql.plist
+#Or, if you don't want/need launchctl, you can just run:
+#    mysql.server start
+#
+#shell> mysql -u root
+#mysql> SET PASSWORD FOR 'root'@'localhost' = PASSWORD('root');
+#mysql> SET PASSWORD FOR 'root'@'127.0.0.1' = PASSWORD('root');
+#mysql> SET PASSWORD FOR 'root'@'%' = PASSWORD('root');
+## https://dev.mysql.com/doc/refman/5.1/en/default-privileges.html
+#  ---------------------------------------------------------------------------
+
+#   -------------------------------
+#   1.  ENVIRONMENT CONFIGURATION
+#   -------------------------------
+
+#   Change Prompt
+#   ------------------------------------------------------------
+export PS1="\[\033[36m\]\u\[\033[m\]@\[\033[32m\]\h:\[\033[33;1m\]\w\[\033[m\]\$ "
+export PS2="| => "
+alias subl='/Applications/Sublime\ Text.app/Contents/SharedSupport/bin/subl'
+alias dirsize="du -sh */"
+alias l="ls -lrta"
+alias ..="cd .."
+alias reload_profile="source ~/.bash_profile"
+alias edit_profile="subl ~/.bash_profile"
+alias ..='cd ../'                           # Go back 1 directory level
+alias ...='cd ../../'                       # Go back 2 directory levels
+alias .3='cd ../../../'                     # Go back 3 directory levels
+alias .4='cd ../../../../'                  # Go back 4 directory levels
+alias .5='cd ../../../../../'               # Go back 5 directory levels
+alias .6='cd ../../../../../../'            # Go back 6 directory levels
+
+alias git_fetch_branch="git fetch && git checkout"
+
+alias edit='subl'                           # edit:         Opens any file in sublime editor
+alias f='open -a Finder ./'                 # f:            Opens current directory in MacOS Finder
+alias ~="cd ~"                              # ~:            Go Home
+alias c='clear'                             # c:            Clear terminal display
+alias which='type -all'                     # which:        Find executables
+alias path='echo -e ${PATH//:/\\n}'         # path:         Echo all executable Paths
+alias show_options='shopt'                  # Show_options: display bash options settings
+alias fix_stty='stty sane'                  # fix_stty:     Restore terminal settings when screwed up
+alias cic='set completion-ignore-case On'   # cic:          Make tab-completion case-insensitive
+mcd () { mkdir -p "$1" && cd "$1"; }        # mcd:          Makes new Dir and jumps inside
+trash () { command mv "$@" ~/.Trash ; }     # trash:        Moves a file to the MacOS trash
+ql () { qlmanage -p "$*" >& /dev/null; }    # ql:           Opens any file in MacOS Quicklook Preview
+alias DT='tee ~/Desktop/terminalOut.txt'    # DT:           Pipe content to file on MacOS Desktop
+#   lr:  Full Recursive Directory Listing
+#   ------------------------------------------
+alias lr='ls -R | grep ":$" | sed -e '\''s/:$//'\'' -e '\''s/[^-][^\/]*\//--/g'\'' -e '\''s/^/   /'\'' -e '\''s/-/|/'\'' | less'
+#   showa: to remind yourself of an alias (given some part of it)
+#   ------------------------------------------------------------
+#showa () { /usr/bin/grep --color=always -i -a1 $@ ~/Library/init/bash/aliases.bash | grep -v '^\s*$' | less -FSRXc ; }
+
+zipf () { zip -r "$1".zip "$1" ; }          # zipf:         To create a ZIP archive of a folder
+alias numFiles='echo $(ls -1 | wc -l)'      # numFiles:     Count of non-hidden files in current dir
+alias make1mb='mkfile 1m ./1MB.dat'         # make1mb:      Creates a file of 1mb size (all zeros)
+alias make5mb='mkfile 5m ./5MB.dat'         # make5mb:      Creates a file of 5mb size (all zeros)
+alias make10mb='mkfile 10m ./10MB.dat'      # make10mb:     Creates a file of 10mb size (all zeros)
+
+alias lsofport="sudo lsof -iTCP -sTCP:LISTEN"
+
+## all goto aliases
+alias goto_dev="cd /development"
+alias goto_prj="cd /development/projects"
+alias goto_down="cd ~/Downloads"
+alias goto_repo="cd /development/repositories/"
+alias goto_env="cd /development/env"
+alias goto_tomcat=" cd /development/env/apache-tomcat-8.0.20"
+
+
+#   Add color to terminal
+#   (this is all commented out as I use Mac Terminal Profiles)
+export CLICOLOR=1
+export LSCOLORS=ExFxBxDxCxegedabagacad
+alias ls='ls -GFh'
+
+
+
+#   ---------------------------
+#   4.  SEARCHING
+#   ---------------------------
+
+alias qfind="find . -name "                 # qfind:    Quickly search for file
+ff () { /usr/bin/find . -name "$@" ; }      # ff:       Find file under the current directory
+ffs () { /usr/bin/find . -name "$@"'*' ; }  # ffs:      Find file whose name starts with a given string
+ffe () { /usr/bin/find . -name '*'"$@" ; }  # ffe:      Find file whose name ends with a given string
+
+#   spotlight: Search for a file using MacOS Spotlight's metadata
+#   -----------------------------------------------------------
+    spotlight () { mdfind "kMDItemDisplayName == '$@'wc"; }
+
+lsport(){
+    lsof -i :$1
+}
+killport(){
+    lsof -i :$1 |grep -v COMMAND| awk -F' ' '{print $2}'|xargs kill -9
+}
+
+prj(){
+    cd /development/projects/$1
+}
+
+eclipse(){
+
+    open /development/env/sts/sts-bundle/STS.app/
+}
+
+#update brew
+updatebrew() {
+    local brew="brew update; brew upgrade;"
+    local gisty="gisty pull_all; gisty sync_delete"
+    local gem="gem update;"
+    local pip="pip freeze --local | grep -v '^\-e' | cut -d = -f 1  | xargs pip install -U -q"
+    sh -c $brew$gisty; sudo sh -c $gem$pip
+}
+
+## change dir to finder dir
+cdf() {
+    target=`osascript -e 'tell application "Finder" to if (count of Finder windows) > 0 then get POSIX path of (target of front Finder window as text)'`
+    if [ "$target" != "" ]; then
+        cd "$target"; pwd
+    else
+        echo 'No Finder window found' >&2
+    fi
+}
+
+## got to ci
+cdci(){
+ export citype=$2
+ export cinumber=$(printf %05d $1)
+ cd "/development/eventim/ci$cinumber$citype"
+
+}
+
+ciws(){
+  cdci "$1" "ws"
+}
+cilib(){
+    cdci "$1" "lib"
+}
+ciwf(){
+    cdci "$1" "wf"
+}
+ciui(){
+    cdci "$1" "ui"
+}
+
+#   extract:  Extract most know archives with one command
+#   ---------------------------------------------------------
+extract () {
+        if [ -f $1 ] ; then
+          case $1 in
+            *.tar.bz2)   tar xjf $1     ;;
+            *.tar.gz)    tar xzf $1     ;;
+            *.bz2)       bunzip2 $1     ;;
+            *.rar)       unrar e $1     ;;
+            *.gz)        gunzip $1      ;;
+            *.tar)       tar xf $1      ;;
+            *.tbz2)      tar xjf $1     ;;
+            *.tgz)       tar xzf $1     ;;
+            *.zip)       unzip $1       ;;
+            *.Z)         uncompress $1  ;;
+            *.7z)        7z x $1        ;;
+            *)     echo "'$1' cannot be extracted via extract()" ;;
+             esac
+         else
+             echo "'$1' is not a valid file"
+         fi
+    }
+
+#Get colors in manual pages
+man() {
+    env \
+    LESS_TERMCAP_mb=$(printf "\e[1;31m") \
+    LESS_TERMCAP_md=$(printf "\e[1;31m") \
+    LESS_TERMCAP_me=$(printf "\e[0m") \
+    LESS_TERMCAP_se=$(printf "\e[0m") \
+    LESS_TERMCAP_so=$(printf "\e[1;44;33m") \
+    LESS_TERMCAP_ue=$(printf "\e[0m") \
+    LESS_TERMCAP_us=$(printf "\e[1;32m") \
+    man "$@"
+}
+
+start_tomcat(){
+    cd /development/env/apache-tomcat-8.0.20
+    ./bin/startup.sh|tail -f logs/catalina.out 
+}
+#Syntax highlighting in cat
+cat() {
+    local out colored
+    out=$(/bin/cat $@)
+    colored=$(echo $out | pygmentize -f console -g 2>/dev/null)
+    [[ -n $colored ]] && echo "$colored" || echo "$out"
+}
+
+#   Set default blocksize for ls, df, du
+#   from this: http://hints.macworld.com/comment.php?mode=view&cid=24491
+#   ------------------------------------------------------------
+    export BLOCKSIZE=1k
+
+
+
+#   ---------------------------
+#   5.  PROCESS MANAGEMENT
+#   ---------------------------
+
+#   findPid: find out the pid of a specified process
+#   -----------------------------------------------------
+#       Note that the command name can be specified via a regex
+#       E.g. findPid '/d$/' finds pids of all processes with names ending in 'd'
+#       Without the 'sudo' it will only find processes of the current user
+#   -----------------------------------------------------
+findpid () { lsof -t -c "$@" ; }
+
+#   ---------------------------------------
+#   8.  WEB DEVELOPMENT
+#   ---------------------------------------
+alias showjava="ps -ef|grep java"
+alias apacheEdit='sudo edit /etc/httpd/httpd.conf'      # apacheEdit:       Edit httpd.conf
+alias apacheRestart='sudo apachectl graceful'           # apacheRestart:    Restart Apache
+alias editHosts='sudo edit /etc/hosts'                  # editHosts:        Edit /etc/hosts file
+alias herr='tail /var/log/httpd/error_log'              # herr:             Tails HTTP error logs
+alias apacheLogs="less +F /var/log/apache2/error_log"   # Apachelogs:   Shows apache error logs
+httpHeaders () { /usr/bin/curl -I -L $@ ; }             # httpHeaders:      Grabs headers from web page
+
+#   httpDebug:  Download a web page and show info on what took time
+#   -------------------------------------------------------------------
+httpDebug () { /usr/bin/curl $@ -o /dev/null -w "dns: %{time_namelookup} connect: %{time_connect} pretransfer: %{time_pretransfer} starttransfer: %{time_starttransfer} total: %{time_total}\n" ; }
+
+
+#   ---------------------------------------
+#   9.  REMINDERS & NOTES
+#   ---------------------------------------
+
+#   remove_disk: spin down unneeded disk
+#   ---------------------------------------
+#   diskutil eject /dev/disk1s3
+
+#   to change the password on an encrypted disk image:
+#   ---------------------------------------
+#   hdiutil chpass /path/to/the/diskimage
+
+#   to mount a read-only disk image as read-write:
+#   ---------------------------------------
+#   hdiutil attach example.dmg -shadow /tmp/example.shadow -noverify
+
+#   mounting a removable drive (of type msdos or hfs)
+#   ---------------------------------------
+#   mkdir /Volumes/Foo
+#   ls /dev/disk*   to find out the device to use in the mount command)
+#   mount -t msdos /dev/disk1s1 /Volumes/Foo
+#   mount -t hfs /dev/disk1s1 /Volumes/Foo
+
+#   to create a file of a given size: /usr/sbin/mkfile or /usr/bin/hdiutil
+#   ---------------------------------------
+#   e.g.: mkfile 10m 10MB.dat
+#   e.g.: hdiutil create -size 10m 10MB.dmg
+#   the above create files that are almost all zeros - if random bytes are desired
+#   then use: ~/Dev/Perl/randBytes 1048576 > 10MB.dat
+
+# Methode to sync alle file to ftp when need it
+sync_sftp(){
+    cd /development/projects/$0
+    git checkout -b upstream
+    sftp -r user@example.com:/var/www/\* .
+    git add .
+    git commit -m 'Import current files from upstream.'
+    git checkout master
+    git diff upstream
+    : # merge or modify files as needed
+    sftp user@example.com:/var/www < <(echo 'put -r *')
+}
+
+## here goes the part of git
+## Einmalig pro Rechner (pro git engine)
+#!/bin/sh
+alias gitconfiguser="git config --global user.name "
+
+alias gitconfigemail="git config --global user.email "
+
+## einmalig pro Repository falls du noch kein lokalen Ordner in /development/projects hast
+##git clone $remote
+
+## das ist die Initializierung falls du lokal einen Ordner in /development/projects hast
+#cd /development/projects/p$nr_name
+## initialisiere erstmal eine lokale Git Repo
+#git init
+## füge alles in diese repository ein
+#git add --all
+## erster Commit zu den eingefügten Inhalten
+#git commit -m "Initial Commit"
+## remote add für die bitbucket repository
+alias gitaddremote="git remote add origin " #
+alias gitpushmaster="git push origin master"
+alias gitaddandcommit="git add . && git commit -m "
+alias gitpullmaster="git pull origin master"
+alias log_tomcat="tail -f /development/env/apache-tomcat-8.0.20/logs/catalina.out"
+alias start_apache="sudo apachectl start"
+alias stop_apache="sudo apachectl stop"
+alias wget="curl -O"
+
+alias lzjira="ssh server@jira.leuchtenzentrale.de"
+alias lzesb="ssh esb@esb.leuchtenzentrale.de"
+### config env export lib path
+export M2_HOME=/development/env/apache-maven-3.3.3
+export M2=$M2_HOME/bin
+export PATH=$M2:$PATH
+
+### config env gradle
+
+GRADLE_HOME=/development/env/gradle/current;
+export GRADLE_HOME
+export PATH=$PATH:$GRADLE_HOME/bin
+
+
+export SSH_EVENTIM_MAGENTO="ubuntu@52.29.122.146"
+export SSH_EVENTIM_MULE="ubuntu@52.57.24.61"
+export SSH_EVENTIM_CI="ubuntu@52.57.82.50"
+
+alias ssh_evntim_magento="ssh -i  ~/.ssh/authorized_keys $SSH_EVENTIM_MAGENTO"
+alias ssh_evntim_mule="ssh -i  ~/.ssh/authorized_keys $SSH_EVENTIM_MULE"
+alias ssh_evntim_ci="ssh -i  ~/.ssh/authorized_keys $SSH_EVENTIM_CI"
+
+### maven setup
+alias mvn_clean_install="mvn clean install -DskipTests=true"
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="/Users/hamudi/.sdkman"
+[[ -s "/Users/hamudi/.sdkman/bin/sdkman-init.sh" ]] && source "/Users/hamudi/.sdkman/bin/sdkman-init.sh"
+
+
+### EVENTIM ALIAS
+### 
+alias mule='open /development/env/Mule/AnypointStudio.app'
+alias goto_eventim='cd /development/eventim'
+alias cilist='cat /development/eventim/README.md |grep "*"'
+alias goto_ci='cd /development/eventim/'
+test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+
+#cat << EOF >> ~/.bash_profile
+# Add Visual Studio Code (code)
+#export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+#EOF
+
+
+export PS1='\W$ '
+export JIRA_HOME=/Users/hamudi/jira/jirahome
