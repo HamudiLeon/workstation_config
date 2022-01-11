@@ -364,3 +364,14 @@ test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shel
 
 export PS1='\W$ '
 export JIRA_HOME=/Users/hamudi/jira/jirahome
+
+
+#Opens Visual Studio Code
+alias vscode="code"
+#Pipe content to file on macOS desktop
+alias dt='tee ~/Desktop/terminalOut.txt'	
+#Path to iCloud 
+alias icloud="~/Library/Mobile\ Documents/com~apple~CloudDocs/"
+# Opens current directory in MacOS Finder
+alias finder='open -a Finder ./'
+
