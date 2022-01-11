@@ -15,7 +15,7 @@ git config --global user.email "leonk@gmail.com"
 
 ```
 
-# Initialize git
+Initialize git
 ```
 git init
 ```
